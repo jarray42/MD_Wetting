@@ -1,0 +1,144 @@
+##################################################################
+# Description:
+#
+# Calculates the solubility parameters components
+# If you use this script, please cite: Jarray A.,  Wijshoff  H.,  Jurriaan  L.  A.,  and  den  Otter  W.  K.,  Systematic  approach  forwettability prediction using molecular dynamics simulations,Soft Matter16, 4299-4310 (2020)
+# Created by Ahmed Jarray
+##################################################################
+
+
+# Water
+
+units          real
+atom_style     full
+boundary       p p p
+
+# Hybrid Forcefield used is here
+pair_style     hybrid/overlay hbond/dreiding/lj 4 3.5 4 140 lj/class2/coul/long 10 11
+
+# Genereting  input for forcefield parameter for different atoms
+ 
+dielectric     1.0
+special_bonds   lj/coul 0.0 0.0 1 
+
+# Bond styles which are implemented in the selected forcefield
+bond_style     harmonic
+angle_style    harmonic
+
+
+
+bond_style	class2
+angle_style	class2
+pair_modify	mix sixthpower tail yes
+ 
+
+#Input data generated
+read_data      water.data
+
+#Total molecules in the simulation cell
+variable    total equal 50
+
+#LJ patameter for Charmm forcefield copy/pasted from data file generated from MAPS
+pair_coeff 	1	1	lj/class2/coul/long 	0.01300    1.09800
+pair_coeff 	1	2	lj/class2/coul/long 	 0.002249061	2.851650799
+pair_coeff 	2	2	lj/class2/coul/long 	0.27400    3.60800
+
+
+ 
+#Drediing parameter from the Dreiding paper, here it is the oxygen
+pair_coeff      2    2   hbond/dreiding/lj 2 i 4 2.75 
+  
+#Use Ewald summation
+kspace_style   ewald 0.0001
+
+#Minimise the geometry
+min_style      sd
+minimize       0.0001 0.000001 500 5000
+
+#We compute the various energies, vhbl is the hbonding energy, vecol is the electrostratic energy and vevdw is the vdwenergy
+
+group          ko  molecule <> 1 ${total}
+ 
+ 
+
+compute   hbl all  pair hbond/dreiding/lj 
+compute   ecol all  pair lj/class2/coul/long   ecoul
+compute   evdw all  pair lj/class2/coul/long   evdwl  
+
+
+variable vhbl equal c_hbl[2]  
+variable vecol equal c_ecol 
+variable vevdw equal c_evdw 
+
+ 
+#We setup the timestep
+
+timestep       1
+
+#We use the NVT ensemble
+group          mobile union all
+fix            1 mobile nvt temp 298.15 298.15 $(10.0*dt)
+velocity       mobile create 298.15 1558425864 mom yes rot yes dist gaussian
+
+#We assign the computed values into variables
+variable volume equal vol
+variable ett equal etotal
+variable pot equal pe 
+variable eevdw equal evdwl
+variable eecoul equal ecoul
+
+#We compute the solubility parameter
+variable svdw equal (abs(v_vevdw)/v_volume*6950846895)^(0.5)/1000
+variable sc equal (abs(v_vecol)/v_volume*6950846895)^(0.5)/1000
+variable sh equal (abs(v_vhbl)/v_volume*6950846895)^(0.5)/1000
+variable stot equal (abs((v_vevdw^(2)+v_vecol^(2)+v_vhbl^(2))^(0.5))/v_volume*6950846895)^(0.5)/1000
+
+
+
+fix 255 all ave/time 10 10 100 v_svdw v_sc  v_sh  file sol.txt
+
+#We run and dump the data the data
+dump    1 all custom 100 dump.lammpstrj id mol type element mass q xu yu zu x y z ix iy iz
+
+ 
+
+thermo_style   custom etotal ke pe ebond eangle edihed eimp evdwl ecoul elong temp press vol
+thermo_modify  line multi
+thermo         10
+thermo_modify  flush yes
+
+
+run           0
+ 
+#We run for 200000 steps
+run            20000
+
+#################################Rerun where we remove the intramolecular energy
+
+unfix 255
+reset_timestep 0
+
+
+#We setup again the forcfield parameters
+pair_style     hybrid/overlay hbond/dreiding/lj 4 3.5 4 140 lj/class2/coul/long 10 11
+
+pair_coeff 	1	1	lj/class2/coul/long 	0.01300    1.09800
+pair_coeff 	1	2	lj/class2/coul/long 	 0.002249061	2.851650799
+pair_coeff 	2	2	lj/class2/coul/long 	0.27400    3.60800
+
+
+ 
+#Drediing parameter from the Dreiding paper, here it is the oxygen
+pair_coeff      2    2    hbond/dreiding/lj 2 i 4 2.75       
+ 
+variable et0 equal  (v_svdw^(2)+v_sc^(2)+v_sh^(2))^(0.5)
+thermo_modify lost ignore flush yes
+#100 because dump is 100
+fix 2552 all ave/time 1 1 100 v_et0 v_svdw v_sc  v_sh   file sol3.txt
+
+#we exclude the intramolecular energy
+neigh_modify exclude molecule/intra all
+ 
+rerun dump.lammpstrj first 1 every 100 dump x y z  box yes
+
+
