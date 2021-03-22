@@ -1,4 +1,10 @@
-# GlyB5
+##################################################################
+# Description:
+#
+# Calculates the solubility parameters components
+# If you use this script, please cite: Jarray A.,  Wijshoff  H.,  Jurriaan  L.  A.,  and  den  Otter  W.  K.,  Systematic  approach  forwettability prediction using molecular dynamics simulations,Soft Matter16, 4299-4310 (2020)
+# Created by Ahmed Jarray
+##################################################################
 
 units          real
 atom_style     full
