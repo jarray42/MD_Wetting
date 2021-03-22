@@ -45,7 +45,7 @@ pair_coeff 	2	2	lj/class2/coul/long 	0.27400    3.60800
 
 
  
-#Drediing parameter from the Dreiding paper, here it is the oxygen
+#Dreiding parameter from the Dreiding paper, here it is the oxygen (2)
 pair_coeff      2    2   hbond/dreiding/lj 2 i 4 2.75 
   
 #Use Ewald summation
