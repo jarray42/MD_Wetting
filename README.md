@@ -5,7 +5,7 @@ To cite, please use: Jarray A.,  Wijshoff  H.,  Jurriaan  L.  A.,  and  den  Ott
 
 and\or
 
-Jarray A., Feichtinger A., and Scholten E,  Linking intermolecular interactions and rheological behaviour in capillary suspensions." Journal of Colloid and Interface Science 627, 415-426 (2022).
+Jarray A., Feichtinger A., and Scholten E,  Linking intermolecular interactions and rheological behaviour in capillary suspensions. Journal of Colloid and Interface Science 627, 415-426 (2022).
 
  
  
